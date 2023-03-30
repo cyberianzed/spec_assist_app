@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'ble/MainPage.dart';
 
-void main() => runApp(SpeechSampleApp());
+void main() => runApp(MaterialApp(home: MainPage()));
 
 class SpeechSampleApp extends StatefulWidget {
   @override
@@ -73,44 +74,42 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Speech to Text Example'),
-        ),
-        body: Column(children: [
-          HeaderWidget(),
-          Container(
-            child: Column(
-              children: <Widget>[
-                InitSpeechWidget(_hasSpeech, initSpeechState),
-                SpeechControlWidget(_hasSpeech, speech.isListening,
-                    startListening, stopListening, cancelListening),
-                SessionOptionsWidget(
-                  _currentLocaleId,
-                  _switchLang,
-                  _localeNames,
-                  _logEvents,
-                  _switchLogging,
-                  _pauseForController,
-                  _listenForController,
-                  _onDevice,
-                  _switchOnDevice,
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: RecognitionResultsWidget(lastWords: lastWords, level: level),
-          ),
-          Expanded(
-            flex: 1,
-            child: ErrorWidget(lastError: lastError),
-          ),
-          SpeechStatusWidget(speech: speech),
-        ]),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Speech to Text Example'),
       ),
+      body: Column(children: [
+        HeaderWidget(),
+        Container(
+          child: Column(
+            children: <Widget>[
+              InitSpeechWidget(_hasSpeech, initSpeechState),
+              SpeechControlWidget(_hasSpeech, speech.isListening,
+                  startListening, stopListening, cancelListening),
+              SessionOptionsWidget(
+                _currentLocaleId,
+                _switchLang,
+                _localeNames,
+                _logEvents,
+                _switchLogging,
+                _pauseForController,
+                _listenForController,
+                _onDevice,
+                _switchOnDevice,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: RecognitionResultsWidget(lastWords: lastWords, level: level),
+        ),
+        Expanded(
+          flex: 1,
+          child: ErrorWidget(lastError: lastError),
+        ),
+        SpeechStatusWidget(speech: speech),
+      ]),
     );
   }
 
@@ -485,7 +484,7 @@ class SpeechStatusWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
-      color: Theme.of(context).backgroundColor,
+      color: Theme.of(context).colorScheme.background,
       child: Center(
         child: speech.isListening
             ? Text(
