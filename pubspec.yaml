@@ -13,6 +13,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   provider: 
   speech_to_text: ^6.1.1
+  flutter_bluetooth_serial: ^0.4.0
+  path_provider: ^2.0.14
+  rxdart: ^0.27.7
+  scoped_model: ^2.0.0
 
 dev_dependencies:
   flutter_test:
