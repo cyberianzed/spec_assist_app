@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -9,6 +12,9 @@ import 'ble/MainPage.dart';
 void main() => runApp(MaterialApp(home: MainPage()));
 
 class SpeechSampleApp extends StatefulWidget {
+  final BluetoothDevice server;
+
+  SpeechSampleApp({Key? key, required this.server}) : super(key: key);
   @override
   _SpeechSampleAppState createState() => _SpeechSampleAppState();
 }
@@ -17,6 +23,15 @@ class SpeechSampleApp extends StatefulWidget {
 /// SpeechToText plugin for using the speech recognition capability
 /// of the underlying platform.
 class _SpeechSampleAppState extends State<SpeechSampleApp> {
+  List<String> messages = [];
+  BluetoothConnection? connection;
+  final ScrollController listScrollController = new ScrollController();
+  String _messageBuffer = '';
+    bool isConnecting = true;
+  bool get isConnected => (connection?.isConnected ?? false);
+  bool isDisconnecting = false;
+
+
   bool _hasSpeech = false;
   bool _logEvents = false;
   bool _onDevice = false;
@@ -70,8 +85,48 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
         _hasSpeech = false;
       });
     }
-  }
 
+    BluetoothConnection.toAddress(widget.server.address).then((_connection) {
+      print('Connected to the device');
+      connection = _connection;
+      setState(() {
+        isConnecting = false;
+        isDisconnecting = false;
+      });
+
+      connection!.input!.listen(_onDataReceived).onDone(() {
+        // Example: Detect which side closed the connection
+        // There should be `isDisconnecting` flag to show are we are (locally)
+        // in middle of disconnecting process, should be set before calling
+        // `dispose`, `finish` or `close`, which all causes to disconnect.
+        // If we except the disconnection, `onDone` should be fired as result.
+        // If we didn't except this (no flag set), it means closing by remote.
+        if (isDisconnecting) {
+          print('Disconnecting locally!');
+        } else {
+          print('Disconnected remotely!');
+        }
+        if (this.mounted) {
+          setState(() {});
+        }
+      });
+    }).catchError((error) {
+      print('Cannot connect, exception occured');
+      print(error);
+    });
+    
+  }
+    @override
+  void dispose() {
+    // Avoid memory leak (`setState` after dispose) and disconnect
+    if (isConnected) {
+      isDisconnecting = true;
+      connection?.dispose();
+      connection = null;
+    }
+
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,7 +134,6 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
         title: const Text('Speech to Text Example'),
       ),
       body: Column(children: [
-        HeaderWidget(),
         Container(
           child: Column(
             children: <Widget>[
@@ -101,8 +155,18 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
           ),
         ),
         Expanded(
-          flex: 4,
+          flex: 2,
           child: RecognitionResultsWidget(lastWords: lastWords, level: level),
+        ),
+        Expanded(
+          flex: 2,
+          child: ListView.builder(
+            controller: listScrollController,
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              return ListTile(title: Text(messages[index]));
+            },
+          ),
         ),
         Expanded(
           flex: 1,
@@ -129,7 +193,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       onResult: resultListener,
       listenFor: Duration(seconds: listenFor ?? 30),
       pauseFor: Duration(seconds: pauseFor ?? 3),
-      partialResults: true,
+      partialResults: false,
       localeId: _currentLocaleId,
       onSoundLevelChange: soundLevelListener,
       cancelOnError: true,
@@ -161,8 +225,12 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     _logEvent(
         'Result listener final: ${result.finalResult}, words: ${result.recognizedWords}');
     setState(() {
-      lastWords = '${result.recognizedWords} - ${result.finalResult}';
+      //TODO voice string
+
+      // lastWords = '${result.recognizedWords} - ${result.finalResult}';
+      lastWords = '${result.recognizedWords} ';
     });
+    _sendMessage(lastWords);
   }
 
   void soundLevelListener(double level) {
@@ -215,6 +283,67 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       _onDevice = val ?? false;
     });
   }
+  void _onDataReceived(Uint8List data) {
+    // Allocate buffer for parsed data
+    int backspacesCounter = 0;
+    data.forEach((byte) {
+      if (byte == 8 || byte == 127) {
+        backspacesCounter++;
+      }
+    });
+    Uint8List buffer = Uint8List(data.length - backspacesCounter);
+    int bufferIndex = buffer.length;
+
+    // Apply backspace control character
+    backspacesCounter = 0;
+    for (int i = data.length - 1; i >= 0; i--) {
+      if (data[i] == 8 || data[i] == 127) {
+        backspacesCounter++;
+      } else {
+        if (backspacesCounter > 0) {
+          backspacesCounter--;
+        } else {
+          buffer[--bufferIndex] = data[i];
+        }
+      }
+    }
+
+    // Create message if there is new line character
+    String dataString = String.fromCharCodes(buffer);
+    int index = buffer.indexOf(13);
+    if (~index != 0) {
+    } else {
+      _messageBuffer = (backspacesCounter > 0
+          ? _messageBuffer.substring(
+              0, _messageBuffer.length - backspacesCounter)
+          : _messageBuffer + dataString);
+    }
+  }
+
+  void _sendMessage(String text) async {
+    text = text.trim();
+
+    if (text.length > 0) {
+      try {
+        connection!.output.add(Uint8List.fromList(utf8.encode(text + "\r\n")));
+        await connection!.output.allSent;
+
+        setState(() {
+          messages.add(text);
+        });
+
+        Future.delayed(Duration(milliseconds: 333)).then((_) {
+          listScrollController.animateTo(
+              listScrollController.position.maxScrollExtent,
+              duration: Duration(milliseconds: 333),
+              curve: Curves.easeOut);
+        });
+      } catch (e) {
+        // Ignore error, but notify state
+        setState(() {});
+      }
+    }
+  }
 }
 
 /// Displays the most recently recognized words and the sound level.
@@ -232,12 +361,6 @@ class RecognitionResultsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Center(
-          child: Text(
-            'Recognized Words',
-            style: TextStyle(fontSize: 22.0),
-          ),
-        ),
         Expanded(
           child: Stack(
             children: <Widget>[
@@ -283,22 +406,6 @@ class RecognitionResultsWidget extends StatelessWidget {
   }
 }
 
-class HeaderWidget extends StatelessWidget {
-  const HeaderWidget({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Speech recognition available',
-        style: TextStyle(fontSize: 22.0),
-      ),
-    );
-  }
-}
-
 /// Display the current error status from the speech
 /// recognizer
 class ErrorWidget extends StatelessWidget {
@@ -315,12 +422,9 @@ class ErrorWidget extends StatelessWidget {
       children: <Widget>[
         Center(
           child: Text(
-            'Error Status',
-            style: TextStyle(fontSize: 22.0),
+            lastError,
+            style: TextStyle(color: Colors.red),
           ),
-        ),
-        Center(
-          child: Text(lastError),
         ),
       ],
     );
@@ -482,20 +586,12 @@ class SpeechStatusWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      color: Theme.of(context).colorScheme.background,
-      child: Center(
+    return Center(
         child: speech.isListening
             ? Text(
-                "I'm listening...",
+                "listening...",
                 style: TextStyle(fontWeight: FontWeight.bold),
               )
-            : Text(
-                'Not listening',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-      ),
-    );
+            : SizedBox());
   }
 }

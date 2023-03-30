@@ -108,6 +108,7 @@ class _ChatPage extends State<ChatPage> {
       );
     }).toList();
 
+  //TODO conect to proced
     final serverName = widget.server.name ?? "Unknown";
     return Scaffold(
       appBar: AppBar(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import '../main.dart';
 import './BackgroundCollectingTask.dart';
 import './ChatPage.dart';
 import './DiscoveryPage.dart';
@@ -231,13 +232,28 @@ class _MainPage extends State<MainPage> {
     );
   }
 
+//   void _startChat(BuildContext context, BluetoothDevice server) {
+//     Navigator.of(context).push(
+//       MaterialPageRoute(
+//         builder: (context) {
+//           return ChatPage(server: server);
+//         },
+//       ),
+//     );
+//   }
+// }
+
   void _startChat(BuildContext context, BluetoothDevice server) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
-          return ChatPage(server: server);
+          //TODO route
+
+          return SpeechSampleApp(server: server);
+          // return SpeechSampleApp();
         },
       ),
     );
   }
 }
+
