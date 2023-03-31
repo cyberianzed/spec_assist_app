@@ -152,7 +152,8 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
               (isConnecting
                   ? Text('Connecting ...')
                   : isConnected
-                      ? Text('Connected with ' + serverName)
+                      ? conect_message(serverName)
+                      // ? Text('Connected with ' + serverName)
                       : Text('log with ' + serverName)),
             ],
           ),
@@ -223,6 +224,11 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     );
   }
 
+  Text conect_message(String serverName) {
+    //_sendMessage('Connected with ' + serverName);
+    return Text('Connected with ' + serverName);
+  }
+
   // This is called each time the users wants to start a new speech
   // recognition session
   void startListening() {
@@ -239,7 +245,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       onResult: resultListener,
       listenFor: Duration(seconds: listenFor ?? 30),
       pauseFor: Duration(seconds: pauseFor ?? 3),
-      partialResults: false,
+      partialResults: true,
       localeId: _currentLocaleId,
       onSoundLevelChange: soundLevelListener,
       cancelOnError: true,
@@ -371,7 +377,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
 
   void _sendMessage(String text) async {
     text = text.trim();
-    print("helffflo");
+    print(text);
 
     if (text.length > 0) {
       try {
