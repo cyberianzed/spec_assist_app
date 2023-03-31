@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import '../main.dart';
+import '../pages/speech_main.dart';
 import './BackgroundCollectingTask.dart';
-import './ChatPage.dart';
 import './DiscoveryPage.dart';
 import './SelectBondedDevicePage.dart';
 
@@ -81,9 +80,7 @@ class _MainPage extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Flutter Bluetooth'),
-      ),
+      appBar: AppBar(),
       body: Container(
         child: ListView(
           children: <Widget>[
@@ -243,20 +240,15 @@ class _MainPage extends State<MainPage> {
   //   );
   // }
 
-
   void _startChat(BuildContext context, BluetoothDevice server) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
           //TODO route
-
           return SpeechSampleApp(server: server);
           // return SpeechSampleApp();
         },
       ),
     );
-  }//finish
-
-
+  } //finish
 }
-
