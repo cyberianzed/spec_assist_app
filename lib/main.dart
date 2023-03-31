@@ -25,7 +25,7 @@ class SpeechSampleApp extends StatefulWidget {
 class _SpeechSampleAppState extends State<SpeechSampleApp> {
   List<String> messages = [];
   BluetoothConnection? connection;
-  final ScrollController listScrollController = new ScrollController();
+  // final ScrollController listScrollController = new ScrollController();
   String _messageBuffer = '';
   bool isConnecting = true;
   bool get isConnected => (connection?.isConnected ?? false);
@@ -156,24 +156,67 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
                   ? Text('Connecting ...')
                   : isConnected
                       ? Text('Connected with ' + serverName)
-                      : Text('log with ' + serverName))
+                      : Text('log with ' + serverName)),
             ],
           ),
         ),
         Expanded(
-          flex: 2,
-          child: RecognitionResultsWidget(lastWords: lastWords, level: level),
-        ),
-        Expanded(
-          flex: 2,
-          child: ListView.builder(
-            controller: listScrollController,
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              return ListTile(title: Text(messages[index]));
-            },
-          ),
-        ),
+            flex: 2,
+            // child: RecognitionResultsWidget(lastWords: lastWords, level: level),
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: Stack(
+                    children: <Widget>[
+                      Container(
+                        color: Theme.of(context).selectedRowColor,
+                        child: Center(
+                          child: Text(
+                            lastWords,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        bottom: 10,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                    blurRadius: .26,
+                                    spreadRadius: level * 1.5,
+                                    color: Colors.black.withOpacity(.05))
+                              ],
+                              color: Colors.white,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50)),
+                            ),
+                            child: IconButton(
+                                icon: Icon(Icons.mic),
+                                onPressed: () => _sendMessage(lastWords)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )),
+        // Expanded(
+        //   flex: 2,
+        //   child: ListView.builder(
+        //     controller: listScrollController,
+        //     itemCount: messages.length,
+        //     itemBuilder: (context, index) {
+        //       return ListTile(title: Text(messages[index]));
+        //     },
+        //   ),
+        // ),
         Expanded(
           flex: 1,
           child: ErrorWidget(lastError: lastError),
@@ -238,11 +281,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     });
     // _sendMessage(lastWords);
     print(lastWords);
-    setState(() {
-      _hasSpeech
-          ? () => _sendMessage("lastWords")
-          : _sendMessage("not connected");
-    });
+    _sendMessage(lastWords);
   }
 
   void soundLevelListener(double level) {
@@ -335,6 +374,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
 
   void _sendMessage(String text) async {
     text = text.trim();
+    print("helffflo");
 
     if (text.length > 0) {
       try {
@@ -345,12 +385,13 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
           messages.add(text);
         });
 
-        Future.delayed(Duration(milliseconds: 333)).then((_) {
-          listScrollController.animateTo(
-              listScrollController.position.maxScrollExtent,
-              duration: Duration(milliseconds: 333),
-              curve: Curves.easeOut);
-        });
+        // Future.delayed(Duration(milliseconds: 333)).then((_) {
+        //   listScrollController.animateTo(
+        //       listScrollController.position.maxScrollExtent,
+        //       duration: Duration(milliseconds: 333),
+        //       curve: Curves.easeOut);
+        // }
+        // );
       } catch (e) {
         // Ignore error, but notify state
         setState(() {});
@@ -406,7 +447,7 @@ class RecognitionResultsWidget extends StatelessWidget {
                     ),
                     child: IconButton(
                       icon: Icon(Icons.mic),
-                      onPressed: () => null,
+                      onPressed: () => {},
                     ),
                   ),
                 ),
@@ -446,10 +487,8 @@ class ErrorWidget extends StatelessWidget {
 
 /// Controls to start and stop speech recognition
 class SpeechControlWidget extends StatelessWidget {
-  const SpeechControlWidget(this.hasSpeech, this.isListening,
-      this.startListening, this.stopListening, this.cancelListening,
-      {Key? key})
-      : super(key: key);
+  SpeechControlWidget(this.hasSpeech, this.isListening, this.startListening,
+      this.stopListening, this.cancelListening);
 
   final bool hasSpeech;
   final bool isListening;
@@ -470,7 +509,9 @@ class SpeechControlWidget extends StatelessWidget {
         TextButton(
           onPressed: () {
             isListening ? stopListening : null;
-            _sendMessage("lastWords");
+            // _sendMessage("lastWords");
+            //     connection!.output.add(Uint8List.fromList(utf8.encode(text + "\r\n")));
+            // await connection!.output.allSent;
           },
           child: Text('Stop'),
         ),

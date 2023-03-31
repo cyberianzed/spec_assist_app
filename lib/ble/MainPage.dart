@@ -220,6 +220,7 @@ class _MainPage extends State<MainPage> {
                   if (selectedDevice != null) {
                     print('Connect -> selected ' + selectedDevice.address);
                     _startChat(context, selectedDevice);
+                    // setServer(server);
                   } else {
                     print('Connect -> no device selected');
                   }
