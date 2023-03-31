@@ -27,10 +27,9 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   BluetoothConnection? connection;
   final ScrollController listScrollController = new ScrollController();
   String _messageBuffer = '';
-    bool isConnecting = true;
+  bool isConnecting = true;
   bool get isConnected => (connection?.isConnected ?? false);
   bool isDisconnecting = false;
-
 
   bool _hasSpeech = false;
   bool _logEvents = false;
@@ -114,9 +113,9 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       print('Cannot connect, exception occured');
       print(error);
     });
-    
   }
-    @override
+
+  @override
   void dispose() {
     // Avoid memory leak (`setState` after dispose) and disconnect
     if (isConnected) {
@@ -127,8 +126,10 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
 
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
+    final serverName = widget.server.name ?? "Unknown";
     return Scaffold(
       appBar: AppBar(
         title: const Text('Speech to Text Example'),
@@ -151,6 +152,11 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
                 _onDevice,
                 _switchOnDevice,
               ),
+              (isConnecting
+                  ? Text('Connecting ...')
+                  : isConnected
+                      ? Text('Connected with ' + serverName)
+                      : Text('log with ' + serverName))
             ],
           ),
         ),
@@ -230,7 +236,13 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       // lastWords = '${result.recognizedWords} - ${result.finalResult}';
       lastWords = '${result.recognizedWords} ';
     });
-    _sendMessage(lastWords);
+    // _sendMessage(lastWords);
+    print(lastWords);
+    setState(() {
+      _hasSpeech
+          ? () => _sendMessage("lastWords")
+          : _sendMessage("not connected");
+    });
   }
 
   void soundLevelListener(double level) {
@@ -283,6 +295,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       _onDevice = val ?? false;
     });
   }
+
   void _onDataReceived(Uint8List data) {
     // Allocate buffer for parsed data
     int backspacesCounter = 0;
@@ -453,8 +466,12 @@ class SpeechControlWidget extends StatelessWidget {
           onPressed: !hasSpeech || isListening ? null : startListening,
           child: Text('Start'),
         ),
+        //TODO start
         TextButton(
-          onPressed: isListening ? stopListening : null,
+          onPressed: () {
+            isListening ? stopListening : null;
+            _sendMessage("lastWords");
+          },
           child: Text('Stop'),
         ),
         TextButton(

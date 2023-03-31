@@ -232,16 +232,16 @@ class _MainPage extends State<MainPage> {
     );
   }
 
-//   void _startChat(BuildContext context, BluetoothDevice server) {
-//     Navigator.of(context).push(
-//       MaterialPageRoute(
-//         builder: (context) {
-//           return ChatPage(server: server);
-//         },
-//       ),
-//     );
-//   }
-// }
+  // void _startChat(BuildContext context, BluetoothDevice server) {
+  //   Navigator.of(context).push(
+  //     MaterialPageRoute(
+  //       builder: (context) {
+  //         return ChatPage(server: server);
+  //       },
+  //     ),
+  //   );
+  // }
+
 
   void _startChat(BuildContext context, BluetoothDevice server) {
     Navigator.of(context).push(
@@ -254,6 +254,8 @@ class _MainPage extends State<MainPage> {
         },
       ),
     );
-  }
+  }//finish
+
+
 }
 
