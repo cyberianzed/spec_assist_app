@@ -8,6 +8,8 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../prompt.dart';
+
 class SpeechSampleApp extends StatefulWidget {
   final BluetoothDevice server;
 
@@ -20,6 +22,7 @@ class SpeechSampleApp extends StatefulWidget {
 /// SpeechToText plugin for using the speech recognition capability
 /// of the underlying platform.
 class _SpeechSampleAppState extends State<SpeechSampleApp> {
+  ChatGPT? _chatGPT;
   List<String> messages = [];
   BluetoothConnection? connection;
   // final ScrollController listScrollController = new ScrollController();
@@ -39,6 +42,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   double minSoundLevel = 50000;
   double maxSoundLevel = -50000;
   String lastWords = '';
+  String response = '';
   String lastError = '';
   String lastStatus = '';
   String _currentLocaleId = '';
@@ -48,6 +52,18 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   @override
   void initState() {
     super.initState();
+    _chatGPT = ChatGPT("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",
+        "https://api.openai.com/v1/completions");
+  }
+
+  Future<void> _sendQuery(String query) async {
+    print('query : ' + query);
+    try {
+      response = await _chatGPT!.getResponse(query);
+      print('response : ' + response);
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   /// This initializes SpeechToText. That only has to be done
@@ -129,7 +145,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     final serverName = widget.server.name ?? "Unknown";
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Speech to Text Example'),
+        title: const Text('Speech to Text'),
       ),
       body: Column(children: [
         Container(
@@ -217,6 +233,21 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
         // ),
         Expanded(
           flex: 1,
+          child: TextButton(
+            onPressed: () {
+              _sendQuery('give only the response as a human for ' + lastWords);
+              print(response);
+              setState(() {});
+            },
+            child: Text('Get Prompt'),
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: Text(response),
+        ),
+        Expanded(
+          flex: 1,
           child: ErrorWidget(lastError: lastError),
         ),
         SpeechStatusWidget(speech: speech),
@@ -278,11 +309,8 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
         'Result listener final: ${result.finalResult}, words: ${result.recognizedWords}');
     setState(() {
       //TODO voice string
-
-      // lastWords = '${result.recognizedWords} - ${result.finalResult}';
       lastWords = '${result.recognizedWords} ';
     });
-    // _sendMessage(lastWords);
     print(lastWords);
     _sendMessage(lastWords);
   }

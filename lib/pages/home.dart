@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:speech_to_text_example/pages/speech_main.dart';
-
-import '../ble/MainPage.dart';
 import '../ble/SelectBondedDevicePage.dart';
+import 'speech_main.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,6 +32,7 @@ class HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text("No devices connected"),
+            // Text(_bluetoothState.toString()),
             SizedBox(height: 20),
             ElevatedButton.icon(
               // onPressed: () {
@@ -40,23 +44,23 @@ class HomePage extends StatelessWidget {
               //   );
               // },
               onPressed: () async {
-                  final BluetoothDevice? selectedDevice =
-                      await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return SelectBondedDevicePage(checkAvailability: false);
-                      },
-                    ),
-                  );
+                final BluetoothDevice? selectedDevice =
+                    await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return SelectBondedDevicePage(checkAvailability: false);
+                    },
+                  ),
+                );
 
-                  if (selectedDevice != null) {
-                    print('Connect -> selected ' + selectedDevice.address);
-                    _startChat(context, selectedDevice);
-                    // setServer(server);
-                  } else {
-                    print('Connect -> no device selected');
-                  }
-                },
+                if (selectedDevice != null) {
+                  print('Connect -> selected ' + selectedDevice.address);
+                  _startChat(context, selectedDevice);
+                  // setServer(server);
+                } else {
+                  print('Connect -> no device selected');
+                }
+              },
               icon: Icon(Icons.add),
               label: Text('Connect'),
               style: ElevatedButton.styleFrom(
@@ -73,15 +77,14 @@ class HomePage extends StatelessWidget {
     );
   }
 
-    void _startChat(BuildContext context, BluetoothDevice server) {
+  void _startChat(BuildContext context, BluetoothDevice server) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
-          //TODO route
           return SpeechSampleApp(server: server);
           // return SpeechSampleApp();
         },
       ),
     );
-  } //finish
+  }
 }

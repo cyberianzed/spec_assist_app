@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:speech_to_text_example/pages/home.dart';
-// import '../ble/MainPage.dart';
+
+import 'pages/home.dart';
 
 void main() => runApp(
       MaterialApp(
