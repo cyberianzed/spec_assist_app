@@ -32,7 +32,6 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text("No devices connected"),
-            // Text(_bluetoothState.toString()),
             SizedBox(height: 20),
             ElevatedButton.icon(
               // onPressed: () {
