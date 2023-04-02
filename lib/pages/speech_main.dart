@@ -8,7 +8,7 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-import '../prompt.dart';
+import '../model/prompt.dart';
 
 class SpeechSampleApp extends StatefulWidget {
   final BluetoothDevice server;
@@ -53,8 +53,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   @override
   void initState() {
     super.initState();
-    _chatGPT = ChatGPT("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",
-        "https://api.openai.com/v1/completions");
+    _chatGPT = ChatGPT();
   }
 
   Future<void> _sendQuery(String query) async {
@@ -68,6 +67,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   }
 
   //TODO rnpromp
+
   // Future<void> run_prompt() async {
   //   // if (_getpro) {
   //   //   _getpro = false;
