@@ -23,7 +23,7 @@ class SpeechSampleApp extends StatefulWidget {
 /// of the underlying platform.
 class _SpeechSampleAppState extends State<SpeechSampleApp> {
   ChatGPT? _chatGPT;
-  List<String> messages = [];
+  // List<String> messages = [];
   BluetoothConnection? connection;
   // final ScrollController listScrollController = new ScrollController();
   String _messageBuffer = '';
@@ -34,6 +34,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   bool _hasSpeech = false;
   bool _logEvents = false;
   bool _onDevice = false;
+  // bool _getpro = false;
   final TextEditingController _pauseForController =
       TextEditingController(text: '8');
   final TextEditingController _listenForController =
@@ -52,7 +53,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
   @override
   void initState() {
     super.initState();
-    _chatGPT = ChatGPT("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",
+    _chatGPT = ChatGPT("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",
         "https://api.openai.com/v1/completions");
   }
 
@@ -65,6 +66,18 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       print(e.toString());
     }
   }
+
+  //TODO rnpromp
+  // Future<void> run_prompt() async {
+  //   // if (_getpro) {
+  //   //   _getpro = false;
+  //   // }
+  //   if (_getpro) {
+  //     _sendQuery('give only the response as a human for ' + lastWords);
+  //     print('response : ' + response);
+  //     _sendMessage(response);
+  //   }
+  // }
 
   /// This initializes SpeechToText. That only has to be done
   /// once per application, though calling it again is harmless
@@ -150,6 +163,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       body: Column(children: [
         Container(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               InitSpeechWidget(_hasSpeech, initSpeechState),
               SpeechControlWidget(_hasSpeech, speech.isListening,
@@ -165,19 +179,26 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
                 _onDevice,
                 _switchOnDevice,
               ),
+              SizedBox(
+                height: 30,
+              ),
               (isConnecting
                   ? Text('Connecting ...')
                   : isConnected
-                      ? conect_message(serverName)
-                      // ? Text('Connected with ' + serverName)
+                      // ? conect_message(serverName)
+                      ? Text('Connected with ' + serverName)
                       : Text('log with ' + serverName)),
+              SizedBox(
+                height: 30,
+              ),
             ],
           ),
         ),
         Expanded(
-            flex: 2,
+            flex: 5,
             // child: RecognitionResultsWidget(lastWords: lastWords, level: level),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 Expanded(
                   child: Stack(
@@ -204,15 +225,15 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
                                 BoxShadow(
                                     blurRadius: .26,
                                     spreadRadius: level * 1.5,
-                                    color: Colors.black.withOpacity(.05))
+                                    color: Color.fromARGB(255, 246, 3, 3)
+                                        .withOpacity(.05))
                               ],
                               color: Colors.white,
                               borderRadius:
                                   BorderRadius.all(Radius.circular(50)),
                             ),
                             child: IconButton(
-                                icon: Icon(Icons.mic),
-                                onPressed: () => _sendMessage(lastWords)),
+                                icon: Icon(Icons.mic), onPressed: () => {}),
                           ),
                         ),
                       ),
@@ -234,9 +255,11 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
         Expanded(
           flex: 1,
           child: TextButton(
-            onPressed: () {
-              _sendQuery('give only the response as a human for ' + lastWords);
+            onPressed: () async {
+              await _sendQuery(
+                  'give only the response as a human for ' + lastWords);
               print(response);
+              await _sendMessage(response);
               setState(() {});
             },
             child: Text('Get Prompt'),
@@ -250,14 +273,17 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
           flex: 1,
           child: ErrorWidget(lastError: lastError),
         ),
-        SpeechStatusWidget(speech: speech),
+        // SpeechStatusWidget(speech: speech),
+        Center(
+          child: speech.isListening
+              ? Text(
+                  "listening...",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )
+              : SizedBox(),
+        ),
       ]),
     );
-  }
-
-  Text conect_message(String serverName) {
-    //_sendMessage('Connected with ' + serverName);
-    return Text('Connected with ' + serverName);
   }
 
   // This is called each time the users wants to start a new speech
@@ -403,7 +429,7 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
     }
   }
 
-  void _sendMessage(String text) async {
+  Future<void> _sendMessage(String text) async {
     text = text.trim();
     print(text);
 
@@ -411,10 +437,11 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       try {
         connection!.output.add(Uint8List.fromList(utf8.encode(text + "\r\n")));
         await connection!.output.allSent;
-
+        // run_prompt();
         setState(() {
-          messages.add(text);
+          // messages.add(text);
         });
+        // run_prompt();
 
         // Future.delayed(Duration(milliseconds: 333)).then((_) {
         //   listScrollController.animateTo(
@@ -429,6 +456,12 @@ class _SpeechSampleAppState extends State<SpeechSampleApp> {
       }
     }
   }
+
+  // SizedBox send_to() {
+  //   _sendQuery('give only the response as a human for ' + lastWords);
+  //   _sendMessage(lastWords);
+  //   return SizedBox();
+  // }
 }
 
 /// Displays the most recently recognized words and the sound level.
@@ -582,26 +615,23 @@ class SessionOptionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 13),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
-            children: [
-              Text('Language: '),
-              DropdownButton<String>(
-                onChanged: (selectedVal) => switchLang(selectedVal),
-                value: currentLocaleId,
-                items: localeNames
-                    .map(
-                      (localeName) => DropdownMenuItem(
-                        value: localeName.localeId,
-                        child: Text(localeName.name),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
+          Text('Language: '),
+          DropdownButton<String>(
+            onChanged: (selectedVal) => switchLang(selectedVal),
+            value: currentLocaleId,
+            items: localeNames
+                .map(
+                  (localeName) => DropdownMenuItem(
+                    value: localeName.localeId,
+                    child: Text(localeName.name),
+                  ),
+                )
+                .toList(),
           ),
           Row(
             children: [
@@ -623,20 +653,20 @@ class SessionOptionsWidget extends StatelessWidget {
                   )),
             ],
           ),
-          Row(
-            children: [
-              Text('On device: '),
-              Checkbox(
-                value: onDevice,
-                onChanged: switchOnDevice,
-              ),
-              Text('Log events: '),
-              Checkbox(
-                value: logEvents,
-                onChanged: switchLogging,
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Text('On device: '),
+          //     Checkbox(
+          //       value: onDevice,
+          //       onChanged: switchOnDevice,
+          //     ),
+          //     Text('Log events: '),
+          //     Checkbox(
+          //       value: logEvents,
+          //       onChanged: switchLogging,
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -665,22 +695,22 @@ class InitSpeechWidget extends StatelessWidget {
 }
 
 /// Display the current status of the listener
-class SpeechStatusWidget extends StatelessWidget {
-  const SpeechStatusWidget({
-    Key? key,
-    required this.speech,
-  }) : super(key: key);
+// class SpeechStatusWidget extends StatelessWidget {
+//   const SpeechStatusWidget({
+//     Key? key,
+//     required this.speech,
+//   }) : super(key: key);
 
-  final SpeechToText speech;
+//   final SpeechToText speech;
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-        child: speech.isListening
-            ? Text(
-                "listening...",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              )
-            : SizedBox());
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Center(
+//         child: speech.isListening
+//             ? Text(
+//                 "listening...",
+//                 style: TextStyle(fontWeight: FontWeight.bold),
+//               )
+//             : send_to());
+//   }
+// }
