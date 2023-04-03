@@ -1,4 +1,4 @@
-package com.csdcorp.speech_to_text_example
+package com.jk.spec_assist
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity

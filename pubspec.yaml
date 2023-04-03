@@ -1,5 +1,4 @@
-name: speech_to_text_example
-description: Demonstrates how to use the speech_to_text plugin.
+name: spec_assist
 version: 1.1.0
 publish_to: 'none'
 
